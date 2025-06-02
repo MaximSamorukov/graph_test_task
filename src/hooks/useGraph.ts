@@ -3,14 +3,7 @@ import * as Comlink from "comlink";
 import type { Edge, Node } from "@xyflow/react";
 
 import GraphWorker from "@/workers/graph.worker?worker";
-
-type GraphApi = {
-  updateEdges: (edges: Edge[]) => Promise<void>;
-  updateNodes: (nodes: Node[]) => Promise<void>;
-  addNode: (node: Node) => Promise<void>;
-  resetDb: () => Promise<void>;
-  getEntities: () => Promise<{ edges: Edge[]; nodes: Node[] }>;
-};
+import type { GraphApi } from "@/workers/graph.worker";
 
 export const useGraph = () => {
   const [workerIsReady, setWorkerIsReady] = useState(false);
