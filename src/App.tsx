@@ -20,6 +20,7 @@ import { useGraph } from "./hooks";
 function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
   const hasLoaded = useRef(false);
   const {
     updateEdgesInDb,
@@ -27,11 +28,14 @@ function App() {
     getEnitiesFromDb,
     resetDb,
     updateNodesInDb,
+    workerIsReady,
   } = useGraph();
 
   useEffect(() => {
+    if (!workerIsReady) return;
     if (hasLoaded.current) return;
     hasLoaded.current = true;
+
     const getSavedEnities = async () => {
       const { edges: savedEdges, nodes: savedNodes } = await getEnitiesFromDb();
       if (savedEdges.length || savedNodes.length) {
@@ -45,7 +49,7 @@ function App() {
       }
     };
     getSavedEnities();
-  }, []);
+  }, [workerIsReady]);
   const onConnect = useCallback(
     (params) => {
       const newEdges = addEdge(params, edges);

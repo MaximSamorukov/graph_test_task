@@ -10,6 +10,8 @@ export class ItemsDB extends Dexie {
       edges: "id",
       nodes: "id",
     });
+    this.edges = this.table("edges");
+    this.nodes = this.table("nodes");
   }
 }
 

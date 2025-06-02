@@ -1,28 +1,52 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import * as Comlink from "comlink";
 import type { Edge, Node } from "@xyflow/react";
-import { itemsDb } from "@/db/db";
+
+import GraphWorker from "@/workers/graph.worker?worker";
+
+type GraphApi = {
+  updateEdges: (edges: Edge[]) => Promise<void>;
+  updateNodes: (nodes: Node[]) => Promise<void>;
+  addNode: (node: Node) => Promise<void>;
+  resetDb: () => Promise<void>;
+  getEntities: () => Promise<{ edges: Edge[]; nodes: Node[] }>;
+};
 
 export const useGraph = () => {
+  const [workerIsReady, setWorkerIsReady] = useState(false);
+  const apiRef = useRef<Comlink.Remote<GraphApi> | null>(null);
+  useEffect(() => {
+    const worker = new GraphWorker();
+    const init = async () => {
+      apiRef.current = Comlink.wrap<GraphApi>(worker);
+      setWorkerIsReady(true);
+    };
+    init();
+
+    return () => {
+      worker.terminate();
+    };
+  }, []);
+
   const updateEdgesInDb = useCallback(async (edges: Edge[]) => {
-    await itemsDb.edges.clear();
-    await itemsDb.edges.bulkAdd(edges);
+    await apiRef.current?.updateEdges(edges);
   }, []);
   const updateNodesInDb = useCallback(async (nodes: Node[]) => {
-    await itemsDb.nodes.clear();
-    await itemsDb.nodes.bulkAdd(nodes);
+    await apiRef.current?.updateNodes(nodes);
   }, []);
 
   const addNodeToDb = useCallback(async (node) => {
-    await itemsDb.nodes.add(node);
+    await apiRef.current?.addNode(node);
   }, []);
   const resetDb = useCallback(async () => {
-    await itemsDb.nodes.clear();
-    await itemsDb.edges.clear();
+    await apiRef.current?.resetDb();
   }, []);
 
   const getEnitiesFromDb = useCallback(async () => {
-    const edges = await itemsDb.edges.toArray();
-    const nodes = await itemsDb.nodes.toArray();
+    const { edges, nodes } = (await apiRef.current?.getEntities()) || {
+      edges: [],
+      nodes: [],
+    };
     return { edges, nodes };
   }, []);
 
@@ -32,5 +56,6 @@ export const useGraph = () => {
     addNodeToDb,
     resetDb,
     getEnitiesFromDb,
+    workerIsReady,
   };
 };
