@@ -7,8 +7,8 @@ export class ItemsDB extends Dexie {
   constructor() {
     super("ItemsDB");
     this.version(1).stores({
-      edges: "id",
-      nodes: "id",
+      edges: "++internalId, id",
+      nodes: "++internalId, id",
     });
     this.edges = this.table("edges");
     this.nodes = this.table("nodes");

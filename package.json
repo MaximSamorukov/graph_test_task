@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
+    "@types/lodash": "^4.17.17",
     "@xyflow/react": "^12.6.4",
     "comlink": "^4.4.2",
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^1.1.7",
+    "lodash": "^4.17.21",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-redux": "^9.2.0",

@@ -16,12 +16,12 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useGraph } from "./hooks";
+import { debounce } from "lodash";
 
 function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
-  const hasLoaded = useRef(false);
   const {
     updateEdgesInDb,
     addNodeToDb,
@@ -31,10 +31,20 @@ function App() {
     workerIsReady,
   } = useGraph();
 
+  const debouncedNodeUpdate = useRef(
+    debounce((nodes: Node[]) => {
+      updateNodesInDb(nodes);
+    }, 400)
+  ).current;
+
+  const debouncedEdgesUpdate = useRef(
+    debounce((uodatedEdges: Edge[]) => {
+      updateEdgesInDb(uodatedEdges);
+    }, 400)
+  ).current;
+
   useEffect(() => {
     if (!workerIsReady) return;
-    if (hasLoaded.current) return;
-    hasLoaded.current = true;
 
     const getSavedEnities = async () => {
       const { edges: savedEdges, nodes: savedNodes } = await getEnitiesFromDb();
@@ -63,7 +73,7 @@ function App() {
     (changes) => {
       const changedNodes = applyNodeChanges(changes, nodes);
       setNodes(changedNodes);
-      updateNodesInDb(changedNodes);
+      debouncedNodeUpdate(changedNodes);
       console.log("Changed nodes:", changedNodes);
     },
     [nodes, setNodes]
@@ -73,7 +83,7 @@ function App() {
     (changes) => {
       const changedEdges = applyEdgeChanges(changes, edges);
       setEdges(changedEdges);
-      updateEdgesInDb(changedEdges);
+      debouncedEdgesUpdate(changedEdges);
     },
     [edges, setEdges]
   );
@@ -87,12 +97,7 @@ function App() {
     setNodes((nds) => nds.concat(newNode));
     addNodeToDb(newNode);
   }, [nodes, setNodes]);
-  const getAll = useCallback(() => {
-    getEnitiesFromDb().then(console.log);
-  }, []);
-  const resetStore = useCallback(() => {
-    resetDb();
-  }, []);
+
   return (
     <div
       style={{
@@ -110,8 +115,7 @@ function App() {
         >
           <Panel>
             <button onClick={addNode}>Add Node</button>
-            <button onClick={getAll}>Get All</button>
-            <button onClick={resetStore}>Delete Store</button>
+            <div> сделано автоматическое сохранение</div>
           </Panel>
           <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         </ReactFlow>
